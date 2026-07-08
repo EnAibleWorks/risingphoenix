@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rising Phoenix — Background Remover</title>
+<style>
+  body{margin:0;background:#0e0f12;color:#e9eaee;font-family:system-ui,-apple-system,sans-serif;padding:1.6rem;line-height:1.6}
+  h1{font-family:'Trebuchet MS',sans-serif;text-transform:uppercase;letter-spacing:.02em;margin:.2rem 0}
+  .orange{color:#ff8534}
+  .panel{background:#17181c;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1.2rem;margin:1rem 0;max-width:1100px}
+  .step1{border:1px solid #ff6a15;box-shadow:0 0 0 3px rgba(255,106,21,.15)}
+  .row{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;margin:.6rem 0}
+  button{background:linear-gradient(135deg,#cf1e1e,#ff6a15);color:#fff;border:0;border-radius:7px;padding:.65rem 1.1rem;font-weight:700;font-size:.95rem;cursor:pointer;text-transform:uppercase;letter-spacing:.04em}
+  button.sec{background:#2a2e35}
+  button:hover{filter:brightness(1.1)}
+  button:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  input[type=range]{width:240px;accent-color:#ff6a15}
+  input[type=file]{color:#c7ccd6;font-size:1rem}
+  label{font-size:.9rem;color:#c7ccd6}
+  code{background:#000;padding:.12rem .4rem;border-radius:4px;color:#ff8534}
+  .stage{margin-top:.8rem;border-radius:10px;overflow:auto;max-width:100%;
+    background-image:linear-gradient(45deg,#3a3f47 25%,transparent 25%),linear-gradient(-45deg,#3a3f47 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#3a3f47 75%),linear-gradient(-45deg,transparent 75%,#3a3f47 75%);
+    background-size:22px 22px;background-position:0 0,0 11px,11px -11px,-11px 0}
+  canvas{display:block;max-width:100%;height:auto;cursor:crosshair}
+  .hint{font-size:.86rem;color:#9aa0ab}
+  .dark-preview{background:#14161a!important;background-image:none!important}
+  ol{max-width:1000px}
+</style>
+</head>
+<body>
+  <h1><span class="orange">Rising Phoenix</span> — Background Remover</h1>
+  <p class="hint">Gives you a <strong>real transparent PNG</strong> (with alpha), keeping the logo's own dark banner intact.</p>
+
+  <div class="panel step1">
+    <div class="row" style="font-size:1.05rem;color:#fff;font-weight:600">STEP 1 — Choose your logo image:</div>
+    <div class="row">
+      <input id="file" type="file" accept="image/*" />
+    </div>
+    <p class="hint">Pick the checkerboard logo from your <strong>Downloads</strong> folder (e.g. <code>ChatGPT Image ... 03_51_59 PM.png</code>). Loading it this way lets the browser export a real transparent file.</p>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="font-size:1.05rem;color:#fff;font-weight:600">STEP 2 — Remove the background:</div>
+    <div class="row">
+      <button id="autoBtn" onclick="autoEdges()" disabled>Auto-remove background</button>
+      <label>Tolerance <input id="tol" type="range" min="10" max="200" value="80" oninput="tolv.textContent=this.value" /></label>
+      <span id="tolv">80</span>
+      <button class="sec" onclick="reset()">Reset</button>
+      <button class="sec" onclick="toggleBg()">Preview: checkerboard / dark</button>
+    </div>
+    <p class="hint">Then <strong>click any leftover background patches</strong> to erase them. Raise tolerance if patches remain; lower it if part of the logo vanishes.</p>
+    <div class="stage" id="stage"><canvas id="cv" width="640" height="200"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="font-size:1.05rem;color:#fff;font-weight:600">STEP 3 — Save it:</div>
+    <div class="row"><button id="dlBtn" onclick="download()" disabled>⬇ Download transparent PNG</button></div>
+    <ol>
+      <li>It saves as <code>header-logo.png</code>.</li>
+      <li>Move it into the website folder, replacing the old <code>header-logo.png</code>.</li>
+      <li>Tell me it's done — I'll switch the header to your artwork.</li>
+    </ol>
+  </div>
+
+<script>
+var cv=document.getElementById('cv'), ctx=cv.getContext('2d',{willReadFrequently:true});
+var tolEl=document.getElementById('tol'), stage=document.getElementById('stage');
+var autoBtn=document.getElementById('autoBtn'), dlBtn=document.getElementById('dlBtn');
+var original=null;
+
+document.getElementById('file').addEventListener('change',function(e){
+  var f=e.target.files[0]; if(!f) return;
+  var url=URL.createObjectURL(f);
+  var im=new Image();
+  im.onload=function(){
+    cv.width=im.naturalWidth; cv.height=im.naturalHeight;
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.drawImage(im,0,0);
+    original=ctx.getImageData(0,0,cv.width,cv.height);
+    autoBtn.disabled=false; dlBtn.disabled=false;
+    URL.revokeObjectURL(url);
+  };
+  im.src=url;  // blob URL → canvas stays exportable
+});
+
+function reset(){ if(original){ ctx.putImageData(original,0,0); } }
+function dist2(d,a,b){ var dr=d[a]-d[b], dg=d[a+1]-d[b+1], db=d[a+2]-d[b+2]; return dr*dr+dg*dg+db*db; }
+
+function flood(seeds){
+  if(!original) return;
+  var w=cv.width,h=cv.height, img=ctx.getImageData(0,0,w,h), d=img.data;
+  var visited=new Uint8Array(w*h), q=new Int32Array(w*h), head=0, tail=0;
+  var tol=+tolEl.value, t2=tol*tol;
+  for(var s=0;s<seeds.length;s++){ var p=seeds[s]; if(p>=0&&p<w*h&&!visited[p]){visited[p]=1; q[tail++]=p;} }
+  while(head<tail){
+    var p=q[head++], o=p*4, x=p%w, y=(p-x)/w;
+    d[o+3]=0;
+    var n0=p-1,n1=p+1,n2=p-w,n3=p+w;
+    if(x>0 && !visited[n0] && dist2(d,o,n0*4)<=t2){visited[n0]=1;q[tail++]=n0;}
+    if(x<w-1 && !visited[n1] && dist2(d,o,n1*4)<=t2){visited[n1]=1;q[tail++]=n1;}
+    if(y>0 && !visited[n2] && dist2(d,o,n2*4)<=t2){visited[n2]=1;q[tail++]=n2;}
+    if(y<h-1 && !visited[n3] && dist2(d,o,n3*4)<=t2){visited[n3]=1;q[tail++]=n3;}
+  }
+  ctx.putImageData(img,0,0);
+}
+
+function autoEdges(){
+  if(!original) return;
+  var w=cv.width,h=cv.height, seeds=[];
+  for(var x=0;x<w;x++){ seeds.push(x); seeds.push((h-1)*w+x); }
+  for(var y=0;y<h;y++){ seeds.push(y*w); seeds.push(y*w+(w-1)); }
+  flood(seeds);
+}
+
+cv.addEventListener('click',function(e){
+  if(!original) return;
+  var r=cv.getBoundingClientRect();
+  var x=Math.round((e.clientX-r.left)*(cv.width/r.width));
+  var y=Math.round((e.clientY-r.top)*(cv.height/r.height));
+  if(x<0||y<0||x>=cv.width||y>=cv.height) return;
+  flood([y*cv.width+x]);
+});
+
+function toggleBg(){ stage.classList.toggle('dark-preview'); }
+function download(){
+  if(!original) return;
+  var a=document.createElement('a');
+  a.href=cv.toDataURL('image/png'); a.download='header-logo.png'; a.click();
+}
+</script>
+</body>
+</html>

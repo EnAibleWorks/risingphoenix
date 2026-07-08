@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rising Phoenix — Image Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  body{margin:0;background:#0a0a0c;color:#e9eaee;font-family:system-ui,-apple-system,sans-serif;padding:2rem;line-height:1.6}
+  h1,h2{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.02em}
+  .orange{color:#ff8534}
+  .card{background:#161619;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:1.4rem;margin:1.2rem 0;max-width:820px}
+  canvas{max-width:100%;height:auto;border:1px solid rgba(255,255,255,.12);border-radius:6px;display:block;margin:.8rem 0}
+  button{background:linear-gradient(135deg,#cf1e1e,#ff6a15);color:#fff;border:0;border-radius:6px;padding:.7rem 1.3rem;font-family:'Oswald',sans-serif;font-weight:600;font-size:1rem;cursor:pointer;text-transform:uppercase;letter-spacing:.05em}
+  button:hover{filter:brightness(1.1)}
+  code{background:#000;padding:.15rem .4rem;border-radius:4px;color:#ff8534}
+  ol{max-width:820px}
+</style>
+</head>
+<body>
+  <h1><span class="orange">Rising Phoenix</span> — Image Generator</h1>
+  <p>Draws the raster image files the site needs (Facebook/Instagram/text link previews require PNG/JPG — SVG won't render there). Click each <strong>Download</strong>, then drop the files next to <code>index.html</code>. Fonts load from Google, so stay online when generating.</p>
+
+  <div class="card">
+    <h2>1. Social share image → <code>og-image.jpg</code> (1200×630)</h2>
+    <canvas id="og" width="1200" height="630"></canvas>
+    <button onclick="dl('og','og-image.jpg','image/jpeg')">Download og-image.jpg</button>
+  </div>
+
+  <div class="card">
+    <h2>2. Favicon → <code>favicon-32.png</code> (32×32)</h2>
+    <canvas id="fav32" width="32" height="32" style="width:96px;image-rendering:pixelated"></canvas>
+    <button onclick="dl('fav32','favicon-32.png','image/png')">Download favicon-32.png</button>
+  </div>
+
+  <div class="card">
+    <h2>3. Apple touch icon → <code>apple-touch-icon.png</code> (180×180)</h2>
+    <canvas id="apple" width="180" height="180" style="width:120px"></canvas>
+    <button onclick="dl('apple','apple-touch-icon.png','image/png')">Download apple-touch-icon.png</button>
+  </div>
+
+  <div class="card">
+    <h2>4. Square profile icon → <code>profile-icon.png</code> (512×512)</h2>
+    <p style="margin:.2rem 0 0;color:#9aa0ab">For social media profile photos (Instagram / Facebook / Google).</p>
+    <canvas id="profile" width="512" height="512" style="width:180px"></canvas>
+    <button onclick="dl('profile','profile-icon.png','image/png')">Download profile-icon.png</button>
+  </div>
+
+  <div class="card">
+    <h2>Done?</h2>
+    <ol>
+      <li>Save the files into the website folder (next to <code>index.html</code>).</li>
+      <li>The favicon &amp; social tags are already wired into the page — no code changes needed.</li>
+      <li>After the site is live, test the preview at <a style="color:#ff8534" href="https://www.opengraph.xyz" target="_blank">opengraph.xyz</a> or Facebook's Sharing Debugger.</li>
+    </ol>
+  </div>
+
+<script>
+// ===== Shared emblem (matches favicon.svg / header) =====
+function drawEmblem(ctx, size, cx, cy){
+  var s = size/120;
+  ctx.save();
+  ctx.translate(cx - 60*s, cy - 60*s);
+  ctx.scale(s,s);
+  var chrome = ctx.createLinearGradient(0,6,0,114);
+  chrome.addColorStop(0,'#fbfcfd'); chrome.addColorStop(.5,'#aab0b9'); chrome.addColorStop(1,'#eef1f4');
+  var fire = ctx.createLinearGradient(0,6,0,114);
+  fire.addColorStop(0,'#ffb03a'); fire.addColorStop(.45,'#ff5a12'); fire.addColorStop(1,'#cf1e1e');
+  // rings
+  ctx.lineWidth=5; ctx.strokeStyle=chrome;
+  ctx.beginPath(); ctx.arc(60,60,54,0,Math.PI*2); ctx.stroke();
+  ctx.lineWidth=1.5; ctx.strokeStyle='rgba(255,90,18,.55)';
+  ctx.beginPath(); ctx.arc(60,60,47,0,Math.PI*2); ctx.stroke();
+  // wings
+  ctx.fillStyle=fire; ctx.globalAlpha=.85;
+  ctx.fill(new Path2D('M58 44 C43 37 32 45 27 60 C37 52 47 52 56 57 C57 52 57 48 58 44 Z'));
+  ctx.fill(new Path2D('M62 44 C77 37 88 45 93 60 C83 52 73 52 64 57 C63 52 63 48 62 44 Z'));
+  ctx.globalAlpha=1;
+  // hub
+  ctx.fillStyle=chrome; ctx.beginPath(); ctx.arc(60,94,5.5,0,Math.PI*2); ctx.fill();
+  // pistons
+  [-28,28].forEach(function(deg){
+    ctx.save(); ctx.translate(60,94); ctx.rotate(deg*Math.PI/180);
+    ctx.fillStyle=chrome;
+    ctx.fillRect(-3,-22,6,22);
+    ctx.beginPath(); ctx.roundRect(-9,-38,18,17,2.5); ctx.fill();
+    ctx.fillStyle='#7f858e'; ctx.fillRect(-9,-32,18,1.6); ctx.fillRect(-9,-28.5,18,1.6);
+    ctx.fillStyle='#5f656e'; ctx.beginPath(); ctx.arc(0,-25,2.4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  });
+  // phoenix flame
+  ctx.save(); ctx.translate(24,6); ctx.scale(3.1,3.1);
+  ctx.fillStyle=fire;
+  ctx.fill(new Path2D('M12 2c1 3-1 4-1 6 0 1 1 2 2 2 0-2 2-3 2-3 1 3-1 5-1 7 3-1 4-4 4-4 1 5-3 9-6 9-4 0-7-3-7-7 0-4 4-6 4-9 0 0 2 1 3-1z'));
+  ctx.globalAlpha=.55;
+  ctx.fill(new Path2D('M8 9c-2 1-3.4 3-3.4 5.6 0 .8.3 1.7.7 2.4C4.9 14.2 5.9 11.5 8 9z'));
+  ctx.globalAlpha=1;
+  ctx.restore();
+  ctx.restore();
+}
+
+// dark rounded tile + emblem (favicons / profile)
+function drawIcon(id){
+  var c=document.getElementById(id), ctx=c.getContext('2d'), n=c.width;
+  var bg=ctx.createLinearGradient(0,0,0,n); bg.addColorStop(0,'#1b1e23'); bg.addColorStop(1,'#0b0c0e');
+  ctx.fillStyle=bg; ctx.beginPath(); ctx.roundRect(0,0,n,n,n*0.22); ctx.fill();
+  drawEmblem(ctx, n*0.86, n/2, n/2);
+}
+
+// chrome wordmark helper (skewed, vertical silver gradient)
+function chromeText(ctx,text,x,y,size){
+  ctx.save();
+  ctx.font='700 '+size+'px Oswald, "Arial Black", sans-serif';
+  ctx.textBaseline='alphabetic';
+  var g=ctx.createLinearGradient(0,y-size,0,y+size*0.15);
+  g.addColorStop(0,'#ffffff'); g.addColorStop(.55,'#b9bfc8'); g.addColorStop(1,'#f0f2f5');
+  ctx.fillStyle=g;
+  ctx.transform(1,0,-0.13,1,0,0); // ~ -7deg skew
+  ctx.fillText(text, x + y*0.13, y);
+  ctx.restore();
+}
+
+function drawOG(){
+  var c=document.getElementById('og'), ctx=c.getContext('2d'), W=1200, H=630;
+  var base=ctx.createLinearGradient(0,0,0,H);
+  base.addColorStop(0,'#0c0d10'); base.addColorStop(.55,'#15171c'); base.addColorStop(1,'#1a1410');
+  ctx.fillStyle=base; ctx.fillRect(0,0,W,H);
+  var glow=ctx.createRadialGradient(600,690,40,600,690,560);
+  glow.addColorStop(0,'rgba(255,90,18,.4)'); glow.addColorStop(1,'rgba(255,90,18,0)');
+  ctx.fillStyle=glow; ctx.fillRect(0,0,W,H);
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,.04)'; ctx.lineWidth=1;
+  for(var x=0;x<=W;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(var y=0;y<=H;y+=60){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  // emblem
+  ctx.save(); ctx.shadowColor='rgba(255,77,0,.5)'; ctx.shadowBlur=50;
+  drawEmblem(ctx, 340, 270, 300);
+  ctx.restore();
+  // wordmark
+  chromeText(ctx,'RISING PHOENIX', 500, 300, 104);
+  // motorsports
+  ctx.save();
+  ctx.font='600 40px Oswald, sans-serif'; ctx.fillStyle='#ff6a15';
+  if('letterSpacing' in ctx) ctx.letterSpacing='16px';
+  ctx.transform(1,0,-0.13,1,0,0);
+  ctx.fillText('MOTORSPORTS', 500 + 350*0.13, 355);
+  ctx.restore();
+  // rule
+  ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.beginPath(); ctx.moveTo(500,400); ctx.lineTo(1120,400); ctx.stroke();
+  // tagline + phone
+  ctx.font='600 30px Oswald, sans-serif'; ctx.fillStyle='#e7e9ee';
+  if('letterSpacing' in ctx) ctx.letterSpacing='1px';
+  ctx.fillText('SERVICE · MODS · CUSTOM BUILDS', 500, 450);
+  ctx.fillStyle='#ff8534'; ctx.font='700 40px Oswald, sans-serif';
+  ctx.fillText('973-307-0299', 500, 505);
+  ctx.fillStyle='#9aa0ab'; ctx.font='500 24px Inter, sans-serif';
+  if('letterSpacing' in ctx) ctx.letterSpacing='0px';
+  ctx.fillText('2790 Route 23 · Hardyston, NJ · All Brands Welcome', 500, 548);
+}
+
+function dl(id,name,type){
+  var c=document.getElementById(id);
+  var url=c.toDataURL(type, type==='image/jpeg'?0.92:undefined);
+  var a=document.createElement('a'); a.href=url; a.download=name; a.click();
+}
+
+function render(){ drawOG(); drawIcon('fav32'); drawIcon('apple'); drawIcon('profile'); }
+// wait for the web font so text renders in Oswald, not a fallback
+if(document.fonts && document.fonts.ready){ document.fonts.load('700 100px Oswald').then(function(){ document.fonts.ready.then(render); }); setTimeout(render, 1200); }
+else { render(); }
+</script>
+</body>
+</html>

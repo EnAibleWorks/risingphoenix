@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1e23"/><stop offset="1" stop-color="#0b0c0e"/>
+    </linearGradient>
+    <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbfcfd"/><stop offset=".5" stop-color="#aab0b9"/><stop offset="1" stop-color="#eef1f4"/>
+    </linearGradient>
+    <linearGradient id="fire" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffb03a"/><stop offset=".45" stop-color="#ff5a12"/><stop offset="1" stop-color="#cf1e1e"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="26" fill="url(#bg)"/>
+  <circle cx="60" cy="60" r="46" fill="none" stroke="url(#chrome)" stroke-width="4.5"/>
+  <circle cx="60" cy="60" r="40" fill="none" stroke="#ff5a12" stroke-width="1.4" opacity=".55"/>
+  <!-- wings -->
+  <path fill="url(#fire)" opacity=".85" d="M58 44 C43 37 32 45 27 60 C37 52 47 52 56 57 C57 52 57 48 58 44 Z"/>
+  <path fill="url(#fire)" opacity=".85" d="M62 44 C77 37 88 45 93 60 C83 52 73 52 64 57 C63 52 63 48 62 44 Z"/>
+  <!-- pistons -->
+  <circle cx="60" cy="90" r="5" fill="url(#chrome)"/>
+  <g transform="translate(60 90) rotate(-28)">
+    <rect x="-2.6" y="-20" width="5.2" height="20" fill="url(#chrome)"/>
+    <rect x="-8" y="-34" width="16" height="15" rx="2.4" fill="url(#chrome)"/>
+    <rect x="-8" y="-29" width="16" height="1.5" fill="#7f858e"/>
+    <circle cx="0" cy="-23" r="2.2" fill="#5f656e"/>
+  </g>
+  <g transform="translate(60 90) rotate(28)">
+    <rect x="-2.6" y="-20" width="5.2" height="20" fill="url(#chrome)"/>
+    <rect x="-8" y="-34" width="16" height="15" rx="2.4" fill="url(#chrome)"/>
+    <rect x="-8" y="-29" width="16" height="1.5" fill="#7f858e"/>
+    <circle cx="0" cy="-23" r="2.2" fill="#5f656e"/>
+  </g>
+  <!-- phoenix flame body -->
+  <g transform="translate(26 8) scale(2.9)">
+    <path fill="url(#fire)" d="M12 2c1 3-1 4-1 6 0 1 1 2 2 2 0-2 2-3 2-3 1 3-1 5-1 7 3-1 4-4 4-4 1 5-3 9-6 9-4 0-7-3-7-7 0-4 4-6 4-9 0 0 2 1 3-1z"/>
+    <path fill="url(#fire)" opacity=".55" d="M8 9c-2 1-3.4 3-3.4 5.6 0 .8.3 1.7.7 2.4C4.9 14.2 5.9 11.5 8 9z"/>
+  </g>
+</svg>
