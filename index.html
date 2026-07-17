@@ -370,12 +370,33 @@ header.scrolled .wm-main{background:none;-webkit-text-fill-color:var(--ink);colo
 .form-note{font-size:.82rem;color:var(--muted);margin-top:.9rem;text-align:center}
 .form-note a{color:var(--orange)}
 .form-error{display:none;font-size:.9rem;color:#b42318;background:rgba(207,30,30,.08);border:1px solid rgba(207,30,30,.3);border-radius:9px;padding:.7rem .9rem;margin-bottom:.9rem;text-align:center}
-.form-success{display:none;text-align:center;padding:2.4rem 1rem}
+.form-error a{color:#b42318;text-decoration:underline}
+
+/* per-field friendly validation messages */
+.field-error{display:none;font-size:.78rem;color:#b42318;margin-top:-.15rem}
+.field-error.show{display:block}
+.field.invalid input,.field.invalid select,.field.invalid textarea{border-color:#b42318;background:#fff5f4}
+
+/* Cloudflare Turnstile widget */
+.turnstile-wrap{display:flex;justify-content:center;margin:.4rem 0 .3rem}
+
+/* disabled submit state while the request is in flight */
+.form-card .btn:disabled{opacity:.6;cursor:not-allowed;pointer-events:none;transform:none;box-shadow:none}
+
+/* success panel: replaces the form, fades + slides up into view */
+.form-success{display:none;text-align:center;padding:1rem 0 0;opacity:0;transform:translateY(24px);transition:opacity .55s ease, transform .55s ease}
 .form-success.show{display:block}
-.form-success svg{width:56px;height:56px;stroke:var(--orange);fill:none;stroke-width:2;margin-bottom:1rem}
-.form-success h3{color:var(--ink)}
-.form-success p{color:var(--muted);margin-top:.5rem}
-.form-success a{color:var(--orange)}
+.form-success.in{opacity:1;transform:translateY(0)}
+.form-success .eyebrow{justify-content:center}
+.form-success h3{font-size:clamp(1.9rem,4vw,2.5rem);color:var(--ink);margin:.3rem 0 1rem}
+.form-success p{color:var(--muted);margin-top:.6rem;max-width:420px;margin-left:auto;margin-right:auto}
+.form-success .success-phone{color:var(--orange);font-weight:600}
+.success-illustration{width:100%;max-width:360px;margin:1.8rem auto 0;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-md)}
+.success-illustration svg{width:100%;height:auto;display:block}
+.form-success .btn{width:auto;display:inline-flex;margin-top:1.7rem}
+@media(prefers-reduced-motion:reduce){
+  .form-success{transition:none}
+}
 
 /* ---------- Footer ---------- */
 footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
@@ -454,6 +475,8 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
   html{scroll-behavior:auto}
 }
 </style>
+<!-- Cloudflare Turnstile widget script (protects the Request Service form) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
 
@@ -779,32 +802,38 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
         <div id="formInner">
           <h3>Request Service</h3>
           <p>Tell us about your bike and what you need. We'll reach out to schedule.</p>
-          <form id="serviceForm" action="https://api.web3forms.com/submit" method="POST" novalidate>
-            <!-- Web3Forms config: paste your access key below (get one free at web3forms.com) -->
-            <input type="hidden" name="access_key" value="YOUR-WEB3FORMS-ACCESS-KEY" />
-            <input type="hidden" name="subject" value="New Service Request — Rising Phoenix Motorsports" />
-            <input type="hidden" name="from_name" value="Rising Phoenix Website" />
-            <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
+          <form id="serviceForm" novalidate>
             <div class="form-grid">
               <div class="field">
                 <label for="name">Name <span class="req">*</span></label>
                 <input type="text" id="name" name="name" required autocomplete="name" />
+                <span class="field-error" id="err-name"></span>
               </div>
               <div class="field">
                 <label for="phone">Phone <span class="req">*</span></label>
                 <input type="tel" id="phone" name="phone" required autocomplete="tel" />
+                <span class="field-error" id="err-phone"></span>
               </div>
               <div class="field full">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" autocomplete="email" />
+                <label for="email">Email <span class="req">*</span></label>
+                <input type="email" id="email" name="email" required autocomplete="email" />
+                <span class="field-error" id="err-email"></span>
+              </div>
+              <div class="field">
+                <label for="bikeYear">Motorcycle Year</label>
+                <input type="text" inputmode="numeric" id="bikeYear" name="bikeYear" placeholder="e.g. 2018" />
+              </div>
+              <div class="field">
+                <label for="bikeMake">Motorcycle Make</label>
+                <input type="text" id="bikeMake" name="bikeMake" placeholder="e.g. Harley-Davidson" />
               </div>
               <div class="field full">
-                <label for="bike">Bike Year / Make / Model</label>
-                <input type="text" id="bike" name="bike" placeholder="e.g. 2018 Harley-Davidson Street Glide" />
+                <label for="bikeModel">Motorcycle Model</label>
+                <input type="text" id="bikeModel" name="bikeModel" placeholder="e.g. Street Glide" />
               </div>
               <div class="field full">
-                <label for="service">Service Needed</label>
-                <select id="service" name="service">
+                <label for="service">Requested Service <span class="req">*</span></label>
+                <select id="service" name="service" required>
                   <option value="">Select a service…</option>
                   <option>Motorcycle Repair</option>
                   <option>Preventive Maintenance</option>
@@ -819,21 +848,80 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
                   <option>Powersports Service</option>
                   <option>Not Sure / Other</option>
                 </select>
+                <span class="field-error" id="err-service"></span>
+              </div>
+              <div class="field full">
+                <label for="contactMethod">Preferred Contact Method <span class="req">*</span></label>
+                <select id="contactMethod" name="contactMethod" required>
+                  <option value="">Select…</option>
+                  <option>Phone Call</option>
+                  <option>Text Message</option>
+                  <option>Email</option>
+                </select>
+                <span class="field-error" id="err-contactMethod"></span>
               </div>
               <div class="field full">
                 <label for="message">Message</label>
                 <textarea id="message" name="message" placeholder="Tell us what's going on with your bike or what you're looking to build…"></textarea>
               </div>
             </div>
+
+            <!-- Cloudflare Turnstile — replace data-sitekey with your Turnstile SITE key (this is
+                 public and safe to ship in HTML; the matching SECRET key lives only in the
+                 Cloudflare Pages Function as the TURNSTILE_SECRET_KEY environment variable). -->
+            <div class="turnstile-wrap">
+              <div class="cf-turnstile" id="turnstileWidget" data-sitekey="YOUR_TURNSTILE_SITE_KEY" data-theme="light"></div>
+            </div>
+            <span class="field-error" id="err-turnstile" style="text-align:center;margin-bottom:.6rem"></span>
+
             <p class="form-error" id="formError" role="alert"></p>
-            <button type="submit" class="btn btn-primary">Send Service Request</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn"><span id="submitBtnLabel">Send Service Request</span></button>
             <p class="form-note">Prefer to talk now? Call or text <a href="tel:+19733070299">973-307-0299</a>.</p>
           </form>
         </div>
         <div class="form-success" id="formSuccess">
-          <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
-          <h3>Thanks — Request Sent</h3>
-          <p>We got your service request and will reach out soon. Need to talk now? Call or text <a href="tel:+19733070299">973-307-0299</a>.</p>
+          <span class="eyebrow">✓ Request Submitted Successfully</span>
+          <h3>Thank You!</h3>
+          <p>We've received your service request. One of our technicians will review your information and contact you as soon as possible.</p>
+          <p>If your request is urgent, please call us directly at <a class="success-phone" href="tel:+19733070299">973-307-0299</a>.</p>
+          <div class="success-illustration" aria-hidden="true">
+            <svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Custom motorcycle illustration">
+              <defs>
+                <radialGradient id="successBg" cx="50%" cy="38%" r="70%">
+                  <stop offset="0%" stop-color="#2a2e35"/>
+                  <stop offset="100%" stop-color="#14161a"/>
+                </radialGradient>
+                <linearGradient id="successAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ff8a3d"/>
+                  <stop offset="100%" stop-color="#cf1e1e"/>
+                </linearGradient>
+                <linearGradient id="successChrome" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#eef1f4"/>
+                  <stop offset="100%" stop-color="#9aa0ab"/>
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="400" height="240" fill="url(#successBg)"/>
+              <ellipse cx="200" cy="204" rx="150" ry="12" fill="#ff6a15" opacity=".18"/>
+              <circle cx="112" cy="176" r="40" fill="none" stroke="url(#successChrome)" stroke-width="6"/>
+              <circle cx="112" cy="176" r="23" fill="none" stroke="#ff6a15" stroke-width="3" opacity=".85"/>
+              <circle cx="112" cy="176" r="5" fill="#eef1f4"/>
+              <circle cx="288" cy="176" r="40" fill="none" stroke="url(#successChrome)" stroke-width="6"/>
+              <circle cx="288" cy="176" r="23" fill="none" stroke="#ff6a15" stroke-width="3" opacity=".85"/>
+              <circle cx="288" cy="176" r="5" fill="#eef1f4"/>
+              <path d="M112 176 L150 122 L214 122 L244 150 L288 176" fill="none" stroke="url(#successAccent)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M150 122 L146 98 L176 90" fill="none" stroke="url(#successChrome)" stroke-width="6" stroke-linecap="round"/>
+              <path d="M180 120 Q200 108 224 120" fill="none" stroke="#333842" stroke-width="10" stroke-linecap="round"/>
+              <path d="M150 150 L92 158" fill="none" stroke="url(#successChrome)" stroke-width="8" stroke-linecap="round"/>
+              <path d="M146 98 L124 90" fill="none" stroke="#333842" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="290" cy="140" r="7" fill="#ffb347"/>
+              <circle cx="290" cy="140" r="13" fill="#ff8a3d" opacity=".25"/>
+              <g transform="translate(318 58)">
+                <circle r="25" fill="url(#successAccent)"/>
+                <path d="M-10 0 L-2 8 L12 -9" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+            </svg>
+          </div>
+          <a href="#top" class="btn btn-primary" id="returnHomeBtn">Return to Home</a>
         </div>
       </div>
 
@@ -1004,25 +1092,139 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
     go(0);
   })();
 
-  // Web3Forms AJAX submit
+  // ---------- Request Service form: validate, verify Turnstile, POST to the Cloudflare Pages Function ----------
   var form = document.getElementById('serviceForm');
-  var btn = form.querySelector('button[type="submit"]');
+  var btn = document.getElementById('submitBtn');
+  var btnLabel = document.getElementById('submitBtnLabel');
   var errBox = document.getElementById('formError');
-  function showSuccess(){ document.getElementById('formInner').style.display='none'; document.getElementById('formSuccess').classList.add('show'); }
+
+  // Friendly, field-level validation rules. Server re-checks all of this —
+  // client validation here is purely for a fast, friendly UX.
+  var FIELD_RULES = [
+    { id:'name', message:'Please enter your name.', test:function(v){ return v.trim().length > 0; } },
+    { id:'phone', message:'Please enter a valid phone number.', test:function(v){ return /^[0-9()+\-.\s]{7,}$/.test(v.trim()); } },
+    { id:'email', message:'Please enter a valid email address.', test:function(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); } },
+    { id:'service', message:'Please choose the service you need.', test:function(v){ return v.trim().length > 0; } },
+    { id:'contactMethod', message:'Please choose your preferred contact method.', test:function(v){ return v.trim().length > 0; } }
+  ];
+
+  function setFieldError(id, message){
+    var field = document.getElementById(id);
+    var wrap = field.closest('.field');
+    var err = document.getElementById('err-' + id);
+    if(message){
+      wrap.classList.add('invalid');
+      if(err){ err.textContent = message; err.classList.add('show'); }
+    } else {
+      wrap.classList.remove('invalid');
+      if(err){ err.textContent = ''; err.classList.remove('show'); }
+    }
+  }
+
+  function validateForm(){
+    var valid = true;
+    FIELD_RULES.forEach(function(rule){
+      var field = document.getElementById(rule.id);
+      var ok = rule.test(field.value || '');
+      setFieldError(rule.id, ok ? '' : rule.message);
+      if(!ok) valid = false;
+    });
+    return valid;
+  }
+
+  // clear a field's error as soon as the visitor starts fixing it
+  FIELD_RULES.forEach(function(rule){
+    var el = document.getElementById(rule.id);
+    el.addEventListener('input', function(){ setFieldError(rule.id, ''); });
+    el.addEventListener('change', function(){ setFieldError(rule.id, ''); });
+  });
+
+  function showSuccess(){
+    document.getElementById('formInner').style.display = 'none';
+    var panel = document.getElementById('formSuccess');
+    panel.style.display = 'block';
+    // Force a synchronous reflow so the browser commits the pre-transition
+    // (display:block, opacity:0, translateY(24px)) state before the "show/in"
+    // classes flip it — otherwise the two style changes can get batched into
+    // one paint and the transition never runs. Reading offsetHeight forces
+    // this reliably even in a backgrounded tab, unlike requestAnimationFrame,
+    // which browsers throttle/suspend when the tab isn't visible.
+    void panel.offsetHeight;
+    panel.classList.add('show', 'in');
+  }
+
+  var returnHomeBtn = document.getElementById('returnHomeBtn');
+  if(returnHomeBtn){
+    returnHomeBtn.addEventListener('click', function(){
+      // reset back to a fresh form after the scroll-to-top finishes, so a
+      // visitor who returns to the contact section doesn't see a stuck panel
+      setTimeout(function(){
+        document.getElementById('formSuccess').classList.remove('show','in');
+        document.getElementById('formSuccess').style.display = 'none';
+        document.getElementById('formInner').style.display = '';
+        form.reset();
+        if(window.turnstile){ window.turnstile.reset(); }
+      }, 400);
+    });
+  }
+
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    errBox.style.display='none';
-    if(!form.checkValidity()){ form.reportValidity(); return; }
-    var key = form.querySelector('[name="access_key"]').value;
-    if(key.indexOf('YOUR-WEB3FORMS') !== -1){
-      errBox.textContent = 'Form is not connected yet. Please call or text 973-307-0299.';
-      errBox.style.display='block'; return;
+    errBox.style.display = 'none';
+
+    if(!validateForm()){
+      errBox.textContent = 'Please fix the highlighted fields above.';
+      errBox.style.display = 'block';
+      return;
     }
-    var original = btn.textContent; btn.disabled = true; btn.textContent = 'Sending…';
-    fetch(form.action, { method:'POST', headers:{'Accept':'application/json'}, body:new FormData(form) })
-      .then(function(r){ return r.json(); })
-      .then(function(data){ if(data.success){ showSuccess(); } else { throw new Error(data.message||'failed'); } })
-      .catch(function(){ btn.disabled=false; btn.textContent=original; errBox.textContent='Something went wrong sending your request. Please call or text 973-307-0299.'; errBox.style.display='block'; });
+
+    var tsInput = form.querySelector('[name="cf-turnstile-response"]');
+    var turnstileToken = tsInput ? tsInput.value : '';
+    var tsErr = document.getElementById('err-turnstile');
+    if(!turnstileToken){
+      tsErr.textContent = 'Please complete the verification challenge.';
+      tsErr.classList.add('show');
+      return;
+    }
+    tsErr.classList.remove('show');
+
+    var payload = {
+      name: document.getElementById('name').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      bikeYear: document.getElementById('bikeYear').value.trim(),
+      bikeMake: document.getElementById('bikeMake').value.trim(),
+      bikeModel: document.getElementById('bikeModel').value.trim(),
+      service: document.getElementById('service').value,
+      contactMethod: document.getElementById('contactMethod').value,
+      message: document.getElementById('message').value.trim(),
+      turnstileToken: turnstileToken
+    };
+
+    var originalLabel = btnLabel.textContent;
+    btn.disabled = true;
+    btnLabel.textContent = 'Sending…';
+
+    fetch('/api/service-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+      .then(function(res){
+        if(res.ok && res.data && res.data.success){
+          showSuccess();
+        } else {
+          throw new Error((res.data && res.data.message) || 'failed');
+        }
+      })
+      .catch(function(){
+        btn.disabled = false;
+        btnLabel.textContent = originalLabel;
+        errBox.innerHTML = '<strong>We\'re sorry.</strong> Something went wrong while sending your request. Please try again or call us directly at <a href="tel:+19733070299">973-307-0299</a>.';
+        errBox.style.display = 'block';
+        if(window.turnstile){ window.turnstile.reset(); }
+      });
   });
 })();
 </script>
