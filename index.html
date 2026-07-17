@@ -192,10 +192,7 @@ header.scrolled .nav{padding:.4rem 1.5rem}
 .logo-plate{display:inline-flex;align-items:center}
 .header-logo{height:50px;width:auto;display:block;transition:height .3s}
 header.scrolled .header-logo{height:44px}
-/* footer keeps the vector emblem lockup */
-.foot-brand .emblem-svg{width:50px;height:50px;flex:0 0 50px}
-.emblem-svg{width:48px;height:48px;flex:0 0 48px;filter:drop-shadow(0 3px 8px rgba(0,0,0,.4));transition:width .3s,height .3s,filter .3s}
-header.scrolled .emblem-svg{width:42px;height:42px;filter:drop-shadow(0 2px 5px rgba(20,22,26,.2))}
+.footer-logo{height:56px;width:auto;display:block}
 .wm{display:flex;flex-direction:column;line-height:1}
 .wm-main{font-family:'Oswald',sans-serif;font-weight:700;text-transform:uppercase;font-size:1.38rem;letter-spacing:.015em;transform:skewX(-7deg);transform-origin:left;
   background:linear-gradient(180deg,#fdfdfe 0%,#b9bfc8 55%,#eef1f4 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
@@ -419,7 +416,7 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
   .header-logo{height:42px}
   header.scrolled .header-logo{height:38px}
   .logo-plate{padding:4px 9px}
-  .foot-brand .emblem-svg{width:44px;height:44px;flex:0 0 44px}
+  .footer-logo{height:46px}
   .nav-cta .btn{display:none}
   .nav{padding:.7rem 1.1rem}
   /* tighten hero + typography for small screens */
@@ -501,7 +498,7 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
 <header id="header">
   <nav class="nav">
     <a href="#top" class="brand" aria-label="Rising Phoenix Motorsports home">
-      <span class="logo-plate"><img class="header-logo" src="header-logo.png" alt="Rising Phoenix Motorsports" width="1334" height="321" /></span>
+      <span class="logo-plate"><img class="header-logo" src="header-logo.png" alt="Rising Phoenix Motorsports" width="2172" height="724" /></span>
     </a>
     <div class="nav-links" id="navLinks">
       <a href="#services">Services</a>
@@ -850,11 +847,7 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
     <div class="foot-wrap">
       <div class="foot-brand">
         <a href="#top" class="brand">
-          <svg class="emblem-svg" viewBox="0 0 120 120" aria-hidden="true"><use href="#rpm-emblem"/></svg>
-          <span class="wm">
-            <span class="wm-main">Rising Phoenix</span>
-            <span class="wm-sub">Motorsports</span>
-          </span>
+          <img class="footer-logo" src="header-logo.png" alt="Rising Phoenix Motorsports" width="2172" height="724" />
         </a>
         <p>Professional Route 23 motorcycle &amp; powersports shop serving Sussex County and North Jersey. Repair, maintenance, performance, engine rebuilds &amp; custom builds. All brands welcome.</p>
       </div>
