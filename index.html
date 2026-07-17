@@ -377,9 +377,6 @@ header.scrolled .wm-main{background:none;-webkit-text-fill-color:var(--ink);colo
 .field-error.show{display:block}
 .field.invalid input,.field.invalid select,.field.invalid textarea{border-color:#b42318;background:#fff5f4}
 
-/* Cloudflare Turnstile widget */
-.turnstile-wrap{display:flex;justify-content:center;margin:.4rem 0 .3rem}
-
 /* disabled submit state while the request is in flight */
 .form-card .btn:disabled{opacity:.6;cursor:not-allowed;pointer-events:none;transform:none;box-shadow:none}
 
@@ -387,12 +384,11 @@ header.scrolled .wm-main{background:none;-webkit-text-fill-color:var(--ink);colo
 .form-success{display:none;text-align:center;padding:1rem 0 0;opacity:0;transform:translateY(24px);transition:opacity .55s ease, transform .55s ease}
 .form-success.show{display:block}
 .form-success.in{opacity:1;transform:translateY(0)}
-.form-success .eyebrow{justify-content:center}
+.success-logo{height:42px;width:auto;margin:0 auto 1.4rem;display:block}
+.success-hero{width:100%;max-width:300px;margin:0 auto 1.5rem;filter:drop-shadow(0 18px 34px rgba(0,0,0,.22))}
+.success-hero img{width:100%;height:auto;display:block}
 .form-success h3{font-size:clamp(1.9rem,4vw,2.5rem);color:var(--ink);margin:.3rem 0 1rem}
 .form-success p{color:var(--muted);margin-top:.6rem;max-width:420px;margin-left:auto;margin-right:auto}
-.form-success .success-phone{color:var(--orange);font-weight:600}
-.success-illustration{width:100%;max-width:360px;margin:1.8rem auto 0;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-md)}
-.success-illustration svg{width:100%;height:auto;display:block}
 .form-success .btn{width:auto;display:inline-flex;margin-top:1.7rem}
 @media(prefers-reduced-motion:reduce){
   .form-success{transition:none}
@@ -475,8 +471,6 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
   html{scroll-behavior:auto}
 }
 </style>
-<!-- Cloudflare Turnstile widget script (protects the Request Service form) -->
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
 
@@ -866,62 +860,17 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
               </div>
             </div>
 
-            <!-- Cloudflare Turnstile — replace data-sitekey with your Turnstile SITE key (this is
-                 public and safe to ship in HTML; the matching SECRET key lives only in the
-                 Cloudflare Pages Function as the TURNSTILE_SECRET_KEY environment variable). -->
-            <div class="turnstile-wrap">
-              <div class="cf-turnstile" id="turnstileWidget" data-sitekey="YOUR_TURNSTILE_SITE_KEY" data-theme="light"></div>
-            </div>
-            <span class="field-error" id="err-turnstile" style="text-align:center;margin-bottom:.6rem"></span>
-
             <p class="form-error" id="formError" role="alert"></p>
             <button type="submit" class="btn btn-primary" id="submitBtn"><span id="submitBtnLabel">Send Service Request</span></button>
             <p class="form-note">Prefer to talk now? Call or text <a href="tel:+19733070299">973-307-0299</a>.</p>
           </form>
         </div>
         <div class="form-success" id="formSuccess">
-          <span class="eyebrow">✓ Request Submitted Successfully</span>
+          <img class="success-logo" src="header-logo.png" alt="Rising Phoenix Motorsports" width="2172" height="724" />
+          <div class="success-hero"><img src="logo.png" alt="" width="1536" height="1024" /></div>
           <h3>Thank You!</h3>
-          <p>We've received your service request. One of our technicians will review your information and contact you as soon as possible.</p>
-          <p>If your request is urgent, please call us directly at <a class="success-phone" href="tel:+19733070299">973-307-0299</a>.</p>
-          <div class="success-illustration" aria-hidden="true">
-            <svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Custom motorcycle illustration">
-              <defs>
-                <radialGradient id="successBg" cx="50%" cy="38%" r="70%">
-                  <stop offset="0%" stop-color="#2a2e35"/>
-                  <stop offset="100%" stop-color="#14161a"/>
-                </radialGradient>
-                <linearGradient id="successAccent" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#ff8a3d"/>
-                  <stop offset="100%" stop-color="#cf1e1e"/>
-                </linearGradient>
-                <linearGradient id="successChrome" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#eef1f4"/>
-                  <stop offset="100%" stop-color="#9aa0ab"/>
-                </linearGradient>
-              </defs>
-              <rect x="0" y="0" width="400" height="240" fill="url(#successBg)"/>
-              <ellipse cx="200" cy="204" rx="150" ry="12" fill="#ff6a15" opacity=".18"/>
-              <circle cx="112" cy="176" r="40" fill="none" stroke="url(#successChrome)" stroke-width="6"/>
-              <circle cx="112" cy="176" r="23" fill="none" stroke="#ff6a15" stroke-width="3" opacity=".85"/>
-              <circle cx="112" cy="176" r="5" fill="#eef1f4"/>
-              <circle cx="288" cy="176" r="40" fill="none" stroke="url(#successChrome)" stroke-width="6"/>
-              <circle cx="288" cy="176" r="23" fill="none" stroke="#ff6a15" stroke-width="3" opacity=".85"/>
-              <circle cx="288" cy="176" r="5" fill="#eef1f4"/>
-              <path d="M112 176 L150 122 L214 122 L244 150 L288 176" fill="none" stroke="url(#successAccent)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M150 122 L146 98 L176 90" fill="none" stroke="url(#successChrome)" stroke-width="6" stroke-linecap="round"/>
-              <path d="M180 120 Q200 108 224 120" fill="none" stroke="#333842" stroke-width="10" stroke-linecap="round"/>
-              <path d="M150 150 L92 158" fill="none" stroke="url(#successChrome)" stroke-width="8" stroke-linecap="round"/>
-              <path d="M146 98 L124 90" fill="none" stroke="#333842" stroke-width="6" stroke-linecap="round"/>
-              <circle cx="290" cy="140" r="7" fill="#ffb347"/>
-              <circle cx="290" cy="140" r="13" fill="#ff8a3d" opacity=".25"/>
-              <g transform="translate(318 58)">
-                <circle r="25" fill="url(#successAccent)"/>
-                <path d="M-10 0 L-2 8 L12 -9" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-              </g>
-            </svg>
-          </div>
-          <a href="#top" class="btn btn-primary" id="returnHomeBtn">Return to Home</a>
+          <p>We've received your service request and one of our technicians will contact you shortly.</p>
+          <a href="#top" class="btn btn-primary" id="returnHomeBtn">Return Home</a>
         </div>
       </div>
 
@@ -1092,7 +1041,7 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
     go(0);
   })();
 
-  // ---------- Request Service form: validate, verify Turnstile, POST to the Cloudflare Pages Function ----------
+  // ---------- Request Service form: validate, POST to the Cloudflare Pages Function ----------
   var form = document.getElementById('serviceForm');
   var btn = document.getElementById('submitBtn');
   var btnLabel = document.getElementById('submitBtnLabel');
@@ -1163,7 +1112,6 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
         document.getElementById('formSuccess').style.display = 'none';
         document.getElementById('formInner').style.display = '';
         form.reset();
-        if(window.turnstile){ window.turnstile.reset(); }
       }, 400);
     });
   }
@@ -1178,16 +1126,6 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
       return;
     }
 
-    var tsInput = form.querySelector('[name="cf-turnstile-response"]');
-    var turnstileToken = tsInput ? tsInput.value : '';
-    var tsErr = document.getElementById('err-turnstile');
-    if(!turnstileToken){
-      tsErr.textContent = 'Please complete the verification challenge.';
-      tsErr.classList.add('show');
-      return;
-    }
-    tsErr.classList.remove('show');
-
     var payload = {
       name: document.getElementById('name').value.trim(),
       phone: document.getElementById('phone').value.trim(),
@@ -1197,8 +1135,7 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
       bikeModel: document.getElementById('bikeModel').value.trim(),
       service: document.getElementById('service').value,
       contactMethod: document.getElementById('contactMethod').value,
-      message: document.getElementById('message').value.trim(),
-      turnstileToken: turnstileToken
+      message: document.getElementById('message').value.trim()
     };
 
     var originalLabel = btnLabel.textContent;
@@ -1223,7 +1160,6 @@ footer{background:#0c0d10;color:var(--muted-dark-bg);padding:3.4rem 0 2rem}
         btnLabel.textContent = originalLabel;
         errBox.innerHTML = '<strong>We\'re sorry.</strong> Something went wrong while sending your request. Please try again or call us directly at <a href="tel:+19733070299">973-307-0299</a>.';
         errBox.style.display = 'block';
-        if(window.turnstile){ window.turnstile.reset(); }
       });
   });
 })();

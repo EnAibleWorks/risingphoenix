@@ -2,27 +2,22 @@
  * Cloudflare Pages Function — POST /api/service-request
  *
  * Backend for the "Request Service" form on the Rising Phoenix Motorsports
- * homepage (index.html). Verifies the Cloudflare Turnstile token, re-validates
- * every required field server-side (never trust the client), then emails the
- * submission via Resend with the customer's own address set as Reply-To so
- * a technician can hit "Reply" and respond straight to the customer.
+ * homepage (index.html). Re-validates every required field server-side
+ * (never trust the client), then emails the submission via Resend with the
+ * customer's own address set as Reply-To so a technician can hit "Reply"
+ * and respond straight to the customer.
  *
  * Required Cloudflare Pages environment variables
- * (Pages project → Settings → Environment variables — set as *secrets*):
+ * (Pages project → Settings → Environment variables):
  *
- *   RESEND_API_KEY        Resend API key used to send the notification email.
- *   FORM_RECIPIENT_EMAIL  Inbox that receives submissions. During development
- *                         and testing this should be andy@enaibleworks.com.
- *   TURNSTILE_SECRET_KEY  Cloudflare Turnstile secret key (pairs with the
- *                         public site key set on the widget in index.html).
+ *   RESEND_API_KEY        Resend API key used to send the notification email (secret).
+ *   FORM_RECIPIENT_EMAIL  Inbox that receives submissions (andy@enaibleworks.com during testing).
+ *   FROM_EMAIL            The "from" address Resend sends as. Must be either
+ *                         Resend's shared onboarding@resend.dev test address,
+ *                         or an address on a domain you've verified in Resend.
  */
 
 const EMAIL_SUBJECT = 'New Rising Phoenix Service Request';
-
-// Resend's shared sending address — works immediately, no domain verification
-// required. Once a sending domain is verified in Resend, swap this for
-// something like "Rising Phoenix Motorsports <requests@risingphoenixmotorsports.com>".
-const FROM_ADDRESS = 'Rising Phoenix Motorsports <onboarding@resend.dev>';
 
 export async function onRequestPost({ request, env }) {
   try {
@@ -43,8 +38,7 @@ export async function onRequestPost({ request, env }) {
       bikeModel = '',
       service = '',
       contactMethod = '',
-      message = '',
-      turnstileToken = ''
+      message = ''
     } = body || {};
 
     // ---- 2. Server-side validation — mirrors the client-side checks, since
@@ -55,20 +49,13 @@ export async function onRequestPost({ request, env }) {
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.push('A valid email address is required.');
     if (!service.trim()) errors.push('Please select the requested service.');
     if (!contactMethod.trim()) errors.push('Please select a preferred contact method.');
-    if (!turnstileToken) errors.push('Missing verification token.');
 
     if (errors.length) {
       return jsonResponse(400, { success: false, message: errors.join(' ') });
     }
 
-    // ---- 3. Verify the Turnstile token with Cloudflare before doing anything else ----
+    // ---- 3. Build the notification email ----
     const ip = request.headers.get('CF-Connecting-IP') || '';
-    const turnstileOk = await verifyTurnstile(turnstileToken, env.TURNSTILE_SECRET_KEY, ip);
-    if (!turnstileOk) {
-      return jsonResponse(400, { success: false, message: 'Verification failed. Please try again.' });
-    }
-
-    // ---- 4. Build the notification email ----
     const submittedAt = new Date().toLocaleString('en-US', {
       timeZone: 'America/New_York',
       dateStyle: 'full',
@@ -80,7 +67,7 @@ export async function onRequestPost({ request, env }) {
       service, contactMethod, message, submittedAt, ip
     });
 
-    // ---- 5. Send via Resend, with the customer's email as Reply-To so a
+    // ---- 4. Send via Resend, with the customer's email as Reply-To so a
     //         technician can just hit "Reply" to respond to the customer ----
     const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -89,7 +76,7 @@ export async function onRequestPost({ request, env }) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: FROM_ADDRESS,
+        from: formatFromAddress(env.FROM_EMAIL),
         to: [env.FORM_RECIPIENT_EMAIL],
         reply_to: email.trim(),
         subject: EMAIL_SUBJECT,
@@ -115,25 +102,14 @@ export async function onRequestPost({ request, env }) {
 // onRequest<METHOD> export exists in this file.
 
 /**
- * Verifies a Turnstile response token against Cloudflare's siteverify
- * endpoint. Uses the FormData shape from Cloudflare's own documented example.
+ * Resend's "from" field accepts either a bare address or a "Name <address>"
+ * pair. FROM_EMAIL is configured as a bare address, so add the shop's display
+ * name here unless someone's already set FROM_EMAIL to the full "Name <addr>" form.
  */
-async function verifyTurnstile(token, secret, ip) {
-  if (!secret) return false;
-
-  const form = new FormData();
-  form.append('secret', secret);
-  form.append('response', token);
-  if (ip) form.append('remoteip', ip);
-
-  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    body: form
-  });
-  if (!res.ok) return false;
-
-  const data = await res.json();
-  return data.success === true;
+function formatFromAddress(fromEmail) {
+  const value = (fromEmail || '').trim();
+  if (!value) return 'Rising Phoenix Motorsports <onboarding@resend.dev>';
+  return value.includes('<') ? value : `Rising Phoenix Motorsports <${value}>`;
 }
 
 /** Escapes user-supplied text before it's interpolated into the HTML email. */
